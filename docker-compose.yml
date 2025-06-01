@@ -1,0 +1,14 @@
+services:
+  whatsapp-viewer:
+    build: .
+    ports:
+      - "11081:5000"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./extracted:/app/extracted
+      - ./static:/app/static
+    environment:
+      - FLASK_ENV=production
+      - FLASK_DEBUG=0
+    restart: unless-stopped
+    container_name: whatsapp-chat-viewer

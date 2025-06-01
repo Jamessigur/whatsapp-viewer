@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Chat</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #ece5dd url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><defs><pattern id="whatsapp-bg" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="2" fill="%23ffffff" opacity="0.05"/></pattern></defs><rect width="100" height="100" fill="url(%23whatsapp-bg)"/></svg>');
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background: #25D366;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .back-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            margin-right: 15px;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            transition: background 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .header-info {
+            flex: 1;
+        }
+        
+        .chat-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+        
+        .chat-subtitle {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            max-height: calc(100vh - 80px);
+        }
+        
+        .message {
+            margin-bottom: 12px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .message-bubble {
+            max-width: 45%;
+            min-width: 120px;
+            padding: 8px 12px;
+            border-radius: 18px;
+            position: relative;
+            word-wrap: break-word;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        
+        .message.sent {
+            align-items: flex-end;
+        }
+        
+        .message.sent .message-bubble {
+            background: #dcf8c6;
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+        }
+        
+        .message.received {
+            align-items: flex-start;
+        }
+        
+        .message.received .message-bubble {
+            background: white;
+            align-self: flex-start;
+            border-bottom-left-radius: 5px;
+        }
+        
+        .sender-name {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 3px;
+            color: #25D366;
+        }
+        
+        .message-text {
+            font-size: 14px;
+            line-height: 1.4;
+            margin-bottom: 5px;
+            white-space: pre-wrap;
+        }
+        
+        .message-time {
+            font-size: 11px;
+            color: #999;
+            text-align: right;
+            margin-top: 5px;
+        }
+        
+        .message.received .message-time {
+            text-align: left;
+        }
+        
+        .message.system {
+            align-items: center;
+        }
+        
+        .message.system .message-bubble {
+            background: #ffeaa7;
+            color: #2d3436;
+            font-style: italic;
+            text-align: center;
+            align-self: center;
+            max-width: 80%;
+        }
+        
+        .attachment {
+            margin-bottom: 8px;
+        }
+        
+        .attachment img {
+            max-width: 250px;
+            max-height: 250px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            display: block;
+        }
+        
+        .attachment img:hover {
+            transform: scale(1.02);
+        }
+        
+        .attachment video {
+            max-width: 250px;
+            max-height: 250px;
+            border-radius: 8px;
+        }
+        
+        .attachment audio {
+            width: 200px;
+            margin: 5px 0;
+        }
+        
+        .attachment-placeholder {
+            background: #f0f0f0;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .media-icon {
+            font-size: 24px;
+        }
+        
+        .audio-player {
+            background: #f5f5f5;
+            border-radius: 20px;
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            max-width: 280px;
+            min-width: 200px;
+        }
+        
+        .audio-player audio {
+            flex: 1;
+            height: 35px;
+        }
+        
+        .audio-info {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            flex: 1;
+        }
+        
+        .audio-duration {
+            font-size: 12px;
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .audio-progress {
+            width: 100%;
+            height: 4px;
+            background: #ddd;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .audio-progress-bar {
+            height: 100%;
+            background: #25D366;
+            width: 0%;
+            transition: width 0.1s;
+        }
+        
+        .custom-audio-player {
+            background: #f5f5f5;
+            border-radius: 20px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            max-width: 280px;
+            min-width: 220px;
+        }
+        
+        .audio-play-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #25D366;
+            border: none;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .audio-play-btn:hover {
+            background: #20b358;
+        }
+        
+        .video-player {
+            position: relative;
+            max-width: 250px;
+        }
+        
+        .video-player video {
+            width: 100%;
+            border-radius: 8px;
+        }
+        
+        .attachment-placeholder {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            max-width: 200px;
+        }
+        
+        .date-separator {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .date-separator span {
+            background: rgba(255,255,255,0.8);
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            color: #666;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .stats {
+            background: white;
+            margin: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            font-size: 14px;
+            color: #666;
+        }
+        
+        /* Модальное окно для изображений */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.9);
+        }
+        
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            max-width: 90%;
+            max-height: 90%;
+        }
+        
+        .modal img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+        
+        .close {
+            position: absolute;
+            top: 15px;
+            right: 35px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: white;
+        }
+        
+        .download-btn {
+            background: #128C7E;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .download-btn {
+            background: #128C7E;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .download-btn:hover {
+            background: #075E54;
+        }
+        
+        @media (max-width: 768px) {
+            .message-bubble {
+                max-width: 85%;
+            }
+            
+            .chat-container {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <button class="back-btn" onclick="window.location.href='/'">←</button>
+        <div class="header-info">
+            <div class="chat-title">WhatsApp Chat</div>
+            <div class="chat-subtitle">{{ messages|length }} сообщений</div>
+        </div>
+        <a href="/download" class="download-btn">
+            📥 Скачать HTML
+        </a>
+    </div>
+    
+    <div class="stats">
+        📊 Всего сообщений: {{ messages|length }} | 
+        👥 Участники: {{ messages|map(attribute='sender')|unique|list|length }} |
+        {% if messages %}
+        📅 Период: {{ messages[0].timestamp.strftime('%d.%m.%Y') }} - {{ messages[-1].timestamp.strftime('%d.%m.%Y') }}
+        {% endif %}
+    </div>
+    
+    <div class="chat-container" id="chat-container">
+        {% set ns = namespace(current_date=None) %}
+        {% for message in messages %}
+            {% set message_date = message.timestamp.strftime('%d.%m.%Y') %}
+            {% if ns.current_date != message_date %}
+                {% set ns.current_date = message_date %}
+                <div class="date-separator">
+                    <span>{{ message_date }}</span>
+                </div>
+            {% endif %}
+            
+            <div class="message {{ 'sent' if message.sender in ['Igor', 'S'] else 'received' if not message.get('is_system', False) else 'system' }}">
+                <div class="message-bubble">
+                    {% if message.sender not in ['Igor', 'S'] and not message.get('is_system', False) %}
+                        <div class="sender-name">{{ message.sender }}</div>
+                    {% endif %}
+                    
+                    {% if message.is_attachment and message.attachment and message.attachment != 'media_omitted' %}
+                        <div class="attachment">
+                            {% set file_ext = message.attachment.split('.')[-1].lower() %}
+                            {% if file_ext in ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'] %}
+                                <img src="/media/{{ message.attachment }}" 
+                                     alt="Изображение" 
+                                     onclick="openModal(this.src)"
+                                     onerror="this.parentElement.innerHTML='<div class=\'attachment-placeholder\'><span class=\'media-icon\'>🖼️</span><div>Изображение недоступно<br><small>{{ message.attachment }}</small></div></div>'">
+                            {% elif file_ext in ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv'] %}
+                                <div class="video-player">
+                                    <video controls preload="metadata"
+                                           onerror="this.parentElement.parentElement.innerHTML='<div class=\'attachment-placeholder\'><span class=\'media-icon\'>🎥</span><div>Видео недоступно<br><small>{{ message.attachment }}</small></div></div>'">
+                                        <source src="/media/{{ message.attachment }}" type="video/{{ file_ext }}">
+                                        Ваш браузер не поддерживает воспроизведение видео.
+                                    </video>
+                                </div>
+                            {% elif file_ext in ['mp3', 'wav', 'ogg', 'opus', 'm4a', 'aac'] %}
+                                <div class="custom-audio-player" data-audio="/media/{{ message.attachment }}">
+                                    <span class="media-icon">🎵</span>
+                                    <div class="audio-info">
+                                        <div class="audio-duration">Аудио сообщение</div>
+                                        <div class="audio-progress">
+                                            <div class="audio-progress-bar"></div>
+                                        </div>
+                                    </div>
+                                    <button class="audio-play-btn" onclick="toggleAudio(this)">▶</button>
+                                    <audio preload="metadata" style="display: none;"
+                                           onerror="this.parentElement.innerHTML='<div class=\'attachment-placeholder\'><span class=\'media-icon\'>🎵</span><div>Аудио недоступно<br><small>{{ message.attachment }}</small></div></div>'">
+                                        <source src="/media/{{ message.attachment }}" type="audio/{{ file_ext }}">
+                                    </audio>
+                                </div>
+                            {% else %}
+                                <div class="attachment-placeholder">
+                                    <span class="media-icon">📎</span>
+                                    <div>
+                                        <strong>Вложение</strong><br>
+                                        <small>{{ message.attachment }}</small>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% elif message.attachment == 'media_omitted' %}
+                        <div class="attachment-placeholder">
+                            <span class="media-icon">📷</span>
+                            <div>Медиафайл не включён</div>
+                        </div>
+                    {% endif %}
+                    
+                    {% if message.text and message.text.strip() %}
+                        <div class="message-text">{{ message.text }}</div>
+                    {% endif %}
+                    
+                    <div class="message-time">
+                        {{ message.timestamp.strftime('%H:%M') }}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Модальное окно для изображений -->
+    <div id="imageModal" class="modal">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <div class="modal-content">
+            <img id="modalImage" src="" alt="">
+        </div>
+    </div>
+    
+    <script>
+        // Прокрутка к последнему сообщению
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatContainer = document.getElementById('chat-container');
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            
+            // Инициализация аудиоплееров
+            initAudioPlayers();
+        });
+        
+        function initAudioPlayers() {
+            const audioPlayers = document.querySelectorAll('.custom-audio-player');
+            console.log(`Найдено ${audioPlayers.length} аудиоплееров`);
+            
+            audioPlayers.forEach((player, index) => {
+                const audio = player.querySelector('audio');
+                const durationEl = player.querySelector('.audio-duration');
+                const audioSrc = audio.querySelector('source')?.src || 'не найден';
+                
+                console.log(`Аудиоплеер ${index}: ${audioSrc}`);
+                
+                // Проверяем поддержку формата
+                const source = audio.querySelector('source');
+                if (source) {
+                    const canPlay = audio.canPlayType(source.type);
+                    console.log(`Может воспроизвести ${source.type}: ${canPlay}`);
+                    
+                    if (canPlay === '') {
+                        durationEl.textContent = '🎵 Формат не поддерживается';
+                    }
+                }
+                
+                // Обработчик загрузки метаданных
+                audio.addEventListener('loadedmetadata', function() {
+                    const duration = formatTime(audio.duration);
+                    durationEl.textContent = `🎵 ${duration}`;
+                    console.log(`Аудио ${index} загружено: ${duration}`);
+                });
+                
+                // Обработчик ошибок загрузки
+                audio.addEventListener('error', function(e) {
+                    console.error(`Ошибка загрузки аудио ${index}:`, e);
+                    console.error('Детали ошибки:', audio.error);
+                    durationEl.textContent = '🎵 Ошибка загрузки';
+                });
+                
+                // Обработчик успешной загрузки
+                audio.addEventListener('canplay', function() {
+                    console.log(`Аудио ${index} готово к воспроизведению`);
+                });
+                
+                // Обработчик прогресса воспроизведения
+                audio.addEventListener('timeupdate', function() {
+                    const progressBar = player.querySelector('.audio-progress-bar');
+                    const progress = (audio.currentTime / audio.duration) * 100;
+                    progressBar.style.width = progress + '%';
+                    
+                    const remaining = audio.duration - audio.currentTime;
+                    durationEl.textContent = `🎵 ${formatTime(remaining)}`;
+                });
+                
+                // Обработчик окончания воспроизведения
+                audio.addEventListener('ended', function() {
+                    const playBtn = player.querySelector('.audio-play-btn');
+                    playBtn.textContent = '▶';
+                    playBtn.dataset.playing = 'false';
+                    const progressBar = player.querySelector('.audio-progress-bar');
+                    progressBar.style.width = '0%';
+                    durationEl.textContent = `🎵 ${formatTime(audio.duration)}`;
+                });
+                
+                // Пытаемся загрузить аудио только если браузер поддерживает формат
+                const source = audio.querySelector('source');
+                if (source && audio.canPlayType(source.type) !== '') {
+                    audio.load();
+                }
+            });
+        }
+        
+        function toggleAudio(button) {
+            const player = button.closest('.custom-audio-player');
+            const audio = player.querySelector('audio');
+            const source = audio.querySelector('source');
+            
+            console.log('Попытка воспроизведения:', source?.src);
+            console.log('MIME тип:', source?.type);
+            console.log('Поддержка браузера:', audio.canPlayType(source?.type || ''));
+            console.log('Статус загрузки:', audio.readyState);
+            
+            // Если формат не поддерживается, показываем сообщение
+            if (source && audio.canPlayType(source.type) === '') {
+                alert('Ваш браузер не поддерживает этот аудиоформат. Попробуйте встроенный плеер ниже или скачайте файл.');
+                return;
+            }
+            
+            // Проверяем, можно ли воспроизвести аудио
+            if (audio.readyState === 0) {
+                console.log('Аудио еще не загружено, пытаемся загрузить...');
+                audio.load();
+                
+                // Ждем загрузки
+                audio.addEventListener('canplay', function() {
+                    console.log('Аудио загружено, пытаемся воспроизвести...');
+                    toggleAudio(button);
+                }, { once: true });
+                
+                audio.addEventListener('error', function(e) {
+                    console.error('Ошибка загрузки при попытке воспроизведения:', e);
+                    alert('Не удалось загрузить аудиофайл. Попробуйте встроенный плеер ниже.');
+                }, { once: true });
+                
+                return;
+            }
+            
+            if (button.dataset.playing === 'true') {
+                audio.pause();
+                button.textContent = '▶';
+                button.dataset.playing = 'false';
+                console.log('Аудио приостановлено');
+            } else {
+                // Останавливаем все другие аудио
+                document.querySelectorAll('.custom-audio-player audio').forEach(otherAudio => {
+                    if (otherAudio !== audio) {
+                        otherAudio.pause();
+                        const otherBtn = otherAudio.closest('.custom-audio-player').querySelector('.audio-play-btn');
+                        otherBtn.textContent = '▶';
+                        otherBtn.dataset.playing = 'false';
+                    }
+                });
+                
+                // Пытаемся воспроизвести
+                const playPromise = audio.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        button.textContent = '⏸';
+                        button.dataset.playing = 'true';
+                        console.log('Аудио воспроизводится');
+                    }).catch(error => {
+                        console.error('Ошибка воспроизведения:', error);
+                        alert(`Не удалось воспроизвести аудио: ${error.message}. Попробуйте встроенный плеер ниже.`);
+                    });
+                } else {
+                    // Старые браузеры
+                    try {
+                        audio.play();
+                        button.textContent = '⏸';
+                        button.dataset.playing = 'true';
+                    } catch (error) {
+                        console.error('Ошибка воспроизведения (старый браузер):', error);
+                        alert('Не удалось воспроизвести аудио. Попробуйте встроенный плеер ниже.');
+                    }
+                }
+            }
+        }
+        
+        function formatTime(seconds) {
+            if (isNaN(seconds)) return '0:00';
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        // Модальное окно для изображений
+        function openModal(src) {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            modal.style.display = 'block';
+            modalImg.src = src;
+        }
+        
+        function closeModal() {
+            document.getElementById('imageModal').style.display = 'none';
+        }
+        
+        // Закрытие модального окна по клику вне изображения
+        window.onclick = function(event) {
+            const modal = document.getElementById('imageModal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+        
+        // Закрытие модального окна по Escape
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
