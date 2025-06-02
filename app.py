@@ -11,7 +11,7 @@ import mimetypes
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['EXTRACTED_FOLDER'] = 'extracted'
-app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024 * 1024  # 100MB max file size
+app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100MB max file size
 
 # Создаем необходимые папки
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -731,7 +731,7 @@ def generate_chat_content_standalone(messages):
         # Определяем класс сообщения
         if message.get('is_system', False):
             msg_class = 'system'
-        elif message['sender'] in ['Igor', 'S']:
+        elif message['sender'] in ['Igor', 'S', 'Ss']:
             msg_class = 'sent'
         else:
             msg_class = 'received'

@@ -423,7 +423,7 @@
                 </div>
             {% endif %}
             
-            <div class="message {{ 'sent' if message.sender in ['Igor', 'S'] else 'received' if not message.get('is_system', False) else 'system' }}">
+            <div class="message {{ 'sent' if message.sender in ['Igor', 'S', 'Ss'] else 'received' if not message.get('is_system', False) else 'system' }}">
                 <div class="message-bubble">
                     {% if message.sender not in ['Igor', 'S'] and not message.get('is_system', False) %}
                         <div class="sender-name">{{ message.sender }}</div>
